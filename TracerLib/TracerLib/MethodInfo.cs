@@ -8,16 +8,13 @@ namespace TracerLib
 {
     class MethodInfo
     {
-        public String Name { get; set; }
-        public String ClassName { get; set; }
-        public int ArgsCount { get; set; }
-        public long Time { get; set; }
+        public System.Reflection.MethodBase Method { get; set; }
+        public TimeSpan Time { get; set; }
 
-        public int ThreadId { get; set; }
-
-        public MethodInfo()
+        public MethodInfo(System.Reflection.MethodBase method)
         {
-            this.Time = 0;
+            this.Method = method;
+            this.Time = new TimeSpan();
         }
     }
 }

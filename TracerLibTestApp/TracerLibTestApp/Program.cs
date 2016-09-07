@@ -13,6 +13,7 @@ namespace TracerLibTestApp
         static void Main(string[] args)
         {
             TraceMethod();
+            TraceThread();
 
             Console.ReadKey();
         }
@@ -21,6 +22,14 @@ namespace TracerLibTestApp
         {
             Class1.getString(5, 6, 7);
             Tracer.PrintToConsole();
+        }
+
+        static void TraceThread()
+        {
+            Thread cThread = new Thread(() => Class1.getString(5, 6, 7));
+            cThread.Start();
+            cThread.Join();
+            Tracer.PrintToConsole();    // ToDo: 
         }
 
     }

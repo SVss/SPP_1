@@ -65,7 +65,7 @@ namespace TracerLib
             threadsDict[threadId].timeSpan = threadsDict[threadId].timeSpan.Add(node.Info.timeSpan);
         }
 
-        public static string BuildXml(string fileName)
+        public static string BuildXml()
         {
             string result = XML_ROOT_START;
             foreach (int id in threadsDict.Keys)

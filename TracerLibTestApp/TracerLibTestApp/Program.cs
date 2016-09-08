@@ -11,6 +11,8 @@ namespace TracerLibTestApp
 {
     class Program
     {
+        const string OUTPUT_FILE_NAME = "result.xml";
+
         static void Main(string[] args)
         {
             TraceClassMethod();
@@ -19,35 +21,21 @@ namespace TracerLibTestApp
 
             Tracer.PrintToConsole();
 
-            string fileName = "";
-
-            bool isExists = false;
             char answ = 'n';
             do
             {
-                Console.Write("Enter filename to save trace to: ");
-                fileName = Console.ReadLine();
+                Console.Write("\nSave to xml ? [y/n]: ");
+                answ = Char.ToLower(Console.ReadKey().KeyChar);
+            } while ((answ != 'n') && (answ != 'y'));
 
-                if (isExists = System.IO.File.Exists(fileName))
-                {
-                    Console.Write("File already exists. Rewrite it? ");
-                    ConsoleKeyInfo key = Console.ReadKey();
-                    answ = Char.ToLower(key.KeyChar);
-                }
-            } while ((answ == 'n') && (isExists));
-
-            if ((!isExists) || (answ == 'y'))
+            if (answ == 'y')
             {
-                string text = Tracer.BuildXml(fileName);
-                System.IO.File.WriteAllText(fileName, text);
+                string text = Tracer.BuildXml();
+                System.IO.File.WriteAllText(OUTPUT_FILE_NAME, text);
 
-                Console.WriteLine("\nStatistics successfully saved");
+                Console.WriteLine("\n\nFile {0} successfully saved.", OUTPUT_FILE_NAME);
+                Console.ReadKey();
             }
-            else
-            {
-                Console.WriteLine("[y/n] <- is it so hard ?");
-            }
-            Console.ReadKey();
         }
 
         static void TraceClassMethod()

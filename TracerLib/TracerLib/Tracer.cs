@@ -9,7 +9,7 @@ namespace TracerLib
 {
     public static class Tracer
     {
-        private const int FRAME_NUMBER = 1;
+        private const int FRAME_NUMBER = 1;             // not to see "StartTrace" each time
         private const string XML_ROOT_START = "<root>";
         private const string XML_ROOT_END = "</root>";
         private const string XML_THREAD_START = "<thread id=\"{0}\" time=\"{1}\">";
@@ -20,19 +20,6 @@ namespace TracerLib
 
         public static void StartTrace()
         {
-            //int i = 0;
-            //foreach (var item in (new StackTrace(true)).GetFrames())
-            //{
-            //    for (int j = 0; j < i; ++j)
-            //    {
-            //        Console.Write(" ");
-            //    }
-            //    Console.WriteLine(item.GetMethod().Name);
-            //    ++i;
-            //}
-
-            //return;
-
             var method = (new StackTrace(true)).GetFrame(FRAME_NUMBER).GetMethod();
             MethodInfo mi = new MethodInfo(method);
 
@@ -42,6 +29,7 @@ namespace TracerLib
                 var item = new ThreadsListItem();
                 item.CallStack = new Stack<TraceTree>();
                 item.CallTree = new List<TraceTree>();
+                item.timeSpan = new TimeSpan(0);
 
                 threadsDict.Add(threadId, item);
             }
@@ -72,34 +60,32 @@ namespace TracerLib
 
             var node = threadsDict[threadId].CallStack.Pop();
             node.stopTimer();
+
+            threadsDict[threadId].timeSpan = threadsDict[threadId].timeSpan.Add(node.Info.timeSpan);
         }
 
-        public static void BuildXml()
+        public static string BuildXml(string fileName)
         {
-            //mi.Name = method.Name;
-            //mi.ClassName = method.ReflectedType.Name;
-            //mi.ArgsCount = method.GetParameters().Count();
+            string result = XML_ROOT_START;
+            foreach (int id in threadsDict.Keys)
+            {
+                object[] args = new object[] { id.ToString(), threadsDict[id].Time };
+                result += String.Format(XML_THREAD_START, args);
+
+                foreach (var item in threadsDict[id].CallTree)
+                {
+                    result += item.ToXMLString();
+                }
+                result += XML_THREAD_END;
+            }
+            result += XML_ROOT_END;
+
+            return result;
         }
 
         public static void PrintToConsole()
         {
-            string result = XML_ROOT_START; // ToDo: Move to BuildXml()
-            foreach (int id in threadsDict.Keys)
-            {
-                object[] args = new object[] { id.ToString(), "xxx" };  // ToDo: Thread Time (in StopTrace())
-                result += "\n" + String.Format(XML_THREAD_START, args);
-
-                foreach (var item in threadsDict[id].CallTree)
-	            {
-                    result += "\n" + item.ToXMLString();
-	            }
-
-                result += XML_THREAD_END;
-            }
-
-            result += XML_ROOT_END;
-
-            Console.WriteLine(result);
+            // ToDO...
         }
     }
 

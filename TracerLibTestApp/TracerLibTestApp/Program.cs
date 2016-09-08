@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -16,32 +17,43 @@ namespace TracerLibTestApp
             TraceMethod();
             TraceThread();
 
-            Tracer.PrintToConsole();
+            string fileName = "";
+
+            bool isExists = false;
+            char answ = 'n';
+            do
+            {
+                Console.Write("Enter filename to save trace to: ");
+                fileName = Console.ReadLine();
+
+                if (isExists = System.IO.File.Exists(fileName))
+                {
+                    Console.Write("File already exists. Rewrite it? ");
+                    ConsoleKeyInfo key = Console.ReadKey();
+                    answ = Char.ToLower(key.KeyChar);
+                }
+            } while ((answ == 'n') && (isExists));
+
+            if ((!isExists) || (answ == 'y'))
+            {
+                string text = Tracer.BuildXml(fileName);
+                System.IO.File.WriteAllText(fileName, text);
+
+                Console.WriteLine("\nStatistics successfully saved");
+            }
+            else
+            {
+                Console.WriteLine("[y/n] <- is it so hard ?");
+            }
             Console.ReadKey();
-        }
-
-        static int go()
-        {
-            Tracer.StartTrace();
-            int result = r1();
-            Tracer.StopTrace();
-
-            return result;
-        }
-
-        static int r1()
-        {
-            Tracer.StartTrace();
-            int result = 42;
-            Tracer.StopTrace();
-
-            return result;
         }
 
         static void TraceClassMethod()
         {
             Tracer.StartTrace();
+
             RecClass.getString(5, 6, 7);
+
             Tracer.StopTrace();
         }
 
@@ -60,7 +72,28 @@ namespace TracerLibTestApp
             Thread cThread = new Thread(() => RecClass.getString(5, 6, 7));
             cThread.Start();
             cThread.Join();
-            //Tracer.PrintToConsole();    // ToDo: 
+        }
+
+        static int go()
+        {
+            Tracer.StartTrace();
+
+            int result = 0;
+            for (int i = 0; i < 3; ++i)
+                result += r1();
+
+            Tracer.StopTrace();
+            return result;
+        }
+
+        static int r1()
+        {
+            Tracer.StartTrace();
+
+            int result = 42;
+
+            Tracer.StopTrace();
+            return result;
         }
 
     }
@@ -75,13 +108,15 @@ namespace TracerLibTestApp
 
             String result = " abc defg";
             result += "9  ";
-            result += f(1).ToString();
+            result += myCoolFunction1(1).ToString();
+            result += anotherAmazingMethod().ToString();
+            result += creativeName().ToString();
             result = result.Trim();
 
             Tracer.StopTrace();
         }
 
-        public static int f(int a)
+        public static int myCoolFunction1(int a)
         {
             Tracer.StartTrace();
 
@@ -89,28 +124,28 @@ namespace TracerLibTestApp
             if (a < REC_DEPTH)
             {
                 Thread.Sleep(1);
-                result = f(a + 1);
+                result = myCoolFunction1(a + 1);
             }
             else
             {
-                result = a + b();
+                result = a;
             }
 
             Tracer.StopTrace();
             return result;
         }
 
-        public static int b()
+        public static int anotherAmazingMethod()
         {
             Tracer.StartTrace();
 
-            int result = c();
+            int result = 5;
 
             Tracer.StopTrace();
             return result;
         }
 
-        public static int c()
+        public static int creativeName()
         {
             Tracer.StartTrace();
 

@@ -33,17 +33,18 @@ namespace TracerLib
         public void stopTimer()
         {
             sw.Stop();
-            Info.Time = sw.Elapsed;
+            Info.timeSpan = sw.Elapsed;
         }
 
         public override string ToString()
         {
-            return base.ToString();
+            return base.ToString();     // ToDO...
         }
 
         public string ToXMLString()
         {
-            long time = 1000*1000*Info.Time.Minutes + 1000*Info.Time.Seconds + Info.Time.Milliseconds;
+
+            long time = Info.Time;
 
             string paramsCountString = "";
             int paramsCount = Info.Method.GetParameters().Count();
@@ -55,7 +56,7 @@ namespace TracerLib
             string result = String.Format(XML_METHOD_START, args);
             foreach (var child in Children)
             {
-                result += "\n" + child.ToXMLString();
+                result +=child.ToXMLString();
             }
             result += XML_METHOD_END;
 

@@ -14,6 +14,7 @@ namespace TracerLib
         private const string XML_ROOT_END = "</root>";
         private const string XML_THREAD_START = "<thread id=\"{0}\" time=\"{1}\">";
         private const string XML_THREAD_END = "</thread>";
+        private const string TO_STRING_THREAD_FORMAT= "Thread {0} (time: {1})\nMethods:\n";
 
         private static StackTrace stackTracer = new StackTrace(true);
         private static Dictionary<int, ThreadsListItem> threadsDict = new Dictionary<int,ThreadsListItem>();
@@ -85,7 +86,19 @@ namespace TracerLib
 
         public static void PrintToConsole()
         {
-            // ToDO...
+            string result = "";
+            foreach (int id in threadsDict.Keys)
+            {
+                object[] args = new object[] { id.ToString(), threadsDict[id].Time };
+                result += "\n" + String.Format(TO_STRING_THREAD_FORMAT, args);
+
+                foreach (var item in threadsDict[id].CallTree)
+                {
+                    result += item.ToString(1) + "\n";
+                }
+            }
+
+            Console.Write(result);
         }
     }
 

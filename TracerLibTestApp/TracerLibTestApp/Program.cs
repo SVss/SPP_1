@@ -17,6 +17,8 @@ namespace TracerLibTestApp
             TraceMethod();
             TraceThread();
 
+            Tracer.PrintToConsole();
+
             string fileName = "";
 
             bool isExists = false;

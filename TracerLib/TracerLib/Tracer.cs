@@ -63,7 +63,8 @@ namespace TracerLib
             var node = threadsDict[threadId].CallStack.Pop();
             node.stopTimer();
 
-            threadsDict[threadId].Time += node.Info.Time;
+            if (threadsDict[threadId].CallStack.Count == 0)
+                threadsDict[threadId].Time += node.Info.Time;
         }
 
         public static string BuildXml()

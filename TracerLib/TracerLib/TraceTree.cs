@@ -11,7 +11,9 @@ namespace TracerLib
         const string XML_METHOD_START = "<method name=\"{0}\" time=\"{1}\" package=\"{2}\"{3}>";
         const string XML_PARAMS_COUNT = " paramsCount=";
         const string XML_METHOD_END = "</method>";
-        const string TO_STRING_FORMAT = "{0}.{1}(params sount: {2}; time: {3})";
+
+        const string TO_STRING_FORMAT = "{0}.{1}(paramsCount: {2}; time: {3})";
+
 
         private Stopwatch sw;
 
@@ -34,7 +36,8 @@ namespace TracerLib
         public void stopTimer()
         {
             sw.Stop();
-            Info.timeSpan = sw.Elapsed;
+            //Console.WriteLine(sw.Elapsed.ToString());
+            Info.Time = sw.ElapsedMilliseconds;
         }
 
         public string ToString(int indent)
@@ -49,7 +52,7 @@ namespace TracerLib
                 Info.Method.ReflectedType.Name,
                 Info.Method.Name,
                 Info.Method.GetParameters().Count(),
-                Info.Time
+                Info.Time.ToString()
             };
 
             result += String.Format(TO_STRING_FORMAT, args);
@@ -62,21 +65,27 @@ namespace TracerLib
             return result;
         }
 
-        public string ToXMLString()
+        public string ToXMLString(int indent)
         {
+            string tab = "";
+            for (int i = 0; i < indent; ++i)
+            {
+                tab += " ";
+            }
+
             string paramsCountString = "";
             int paramsCount = Info.Method.GetParameters().Count();
             if (paramsCount > 0)
                  paramsCountString = XML_PARAMS_COUNT + "\"" + Info.Method.GetParameters().Count() + "\"";
 
-            object[] args = new object[] { Info.Method.Name, Info.Time, Info.Method.ReflectedType.Name, paramsCountString };
+            object[] args = new object[] { Info.Method.Name, Info.Time.ToString(), Info.Method.ReflectedType.Name, paramsCountString };
+            string result = tab + String.Format(XML_METHOD_START, args);
 
-            string result = String.Format(XML_METHOD_START, args);
             foreach (var child in Children)
             {
-                result +=child.ToXMLString();
+                result += "\n" + child.ToXMLString(indent + 1);
             }
-            result += XML_METHOD_END;
+            result += "\n" + tab + XML_METHOD_END;
 
             return result;
         }

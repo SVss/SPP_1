@@ -10,6 +10,7 @@ namespace TracerLib
     public static class Tracer
     {
         private const int FRAME_NUMBER = 1;             // not to see "StartTrace" each time
+        private const int START_INDENT = 1;
         private const string XML_ROOT_START = "<root>";
         private const string XML_ROOT_END = "</root>";
         private const string XML_THREAD_START = "<thread id=\"{0}\" time=\"{1}\">";
@@ -30,7 +31,7 @@ namespace TracerLib
                 var item = new ThreadsListItem();
                 item.CallStack = new Stack<TraceTree>();
                 item.CallTree = new List<TraceTree>();
-                item.timeSpan = new TimeSpan(0);
+                item.Time = 0;
 
                 threadsDict.Add(threadId, item);
             }
@@ -62,26 +63,33 @@ namespace TracerLib
             var node = threadsDict[threadId].CallStack.Pop();
             node.stopTimer();
 
-            threadsDict[threadId].timeSpan = threadsDict[threadId].timeSpan.Add(node.Info.timeSpan);
+            threadsDict[threadId].Time += node.Info.Time;
         }
 
         public static string BuildXml()
         {
             string result = XML_ROOT_START;
+
+            string threadIntent = "";
+            for (int i = 0; i < START_INDENT; ++i)
+            {
+                threadIntent += " ";
+            }
+
             foreach (int id in threadsDict.Keys)
             {
                 object[] args = new object[] { id.ToString(), threadsDict[id].Time };
-                result += String.Format(XML_THREAD_START, args);
+                result += "\n" + threadIntent + String.Format(XML_THREAD_START, args);
 
                 foreach (var item in threadsDict[id].CallTree)
                 {
-                    result += item.ToXMLString();
+                    result += "\n" + item.ToXMLString(START_INDENT + 1);
                 }
-                result += XML_THREAD_END;
+                result += "\n" + threadIntent + XML_THREAD_END;
             }
-            result += XML_ROOT_END;
+            result += "\n" + XML_ROOT_END;
 
-            return result;
+            return result.Trim();
         }
 
         public static void PrintToConsole()

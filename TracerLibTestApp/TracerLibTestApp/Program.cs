@@ -91,6 +91,7 @@ namespace TracerLibTestApp
     class RecClass
     {
         const int REC_DEPTH = 5;
+        const int SLEEP_TIME = 50;
 
         public static void getString(int x, int y, int z)
         {
@@ -113,7 +114,7 @@ namespace TracerLibTestApp
             int result;
             if (a < REC_DEPTH)
             {
-                Thread.Sleep(1);
+                Thread.Sleep(SLEEP_TIME);
                 result = myCoolFunction1(a + 1);
             }
             else

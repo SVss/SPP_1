@@ -8,9 +8,11 @@ namespace TracerLib
 {
     class TraceTree
     {
-        const string XML_METHOD_START = "<method name=\"{0}\" time=\"{1}\" package=\"{2}\"{3}>";
+        const string XML_METHOD_START = "<method name=\"{0}\" time=\"{1}\" package=\"{2}\"{3}";
         const string XML_PARAMS_COUNT = " paramsCount=";
         const string XML_METHOD_END = "</method>";
+        const string XML_TAG_END = ">";
+        const string XML_SELFCLOSE_TAG_END = "/>";
 
         const string TO_STRING_FORMAT = "{0}.{1}(paramsCount: {2}; time: {3})";
 
@@ -81,11 +83,19 @@ namespace TracerLib
             object[] args = new object[] { Info.Method.Name, Info.Time.ToString(), Info.Method.ReflectedType.Name, paramsCountString };
             string result = tab + String.Format(XML_METHOD_START, args);
 
-            foreach (var child in Children)
+            if (Children.Count > 0)
             {
-                result += "\n" + child.ToXMLString(indent + 1);
+                result += XML_TAG_END;
+                foreach (var child in Children)
+                {
+                    result += "\n" + child.ToXMLString(indent + 1);
+                }
+                result += "\n" + tab + XML_METHOD_END;
             }
-            result += "\n" + tab + XML_METHOD_END;
+            else
+            {
+                result += XML_SELFCLOSE_TAG_END;
+            }
 
             return result;
         }

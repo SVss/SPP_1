@@ -3,19 +3,13 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
+using System.Xml;
 
 namespace TracerLib
 {
     class TraceTree
     {
-        const string XML_METHOD_START = "<method name=\"{0}\" time=\"{1}\" package=\"{2}\"{3}";
-        const string XML_PARAMS_COUNT = " paramsCount=";
-        const string XML_METHOD_END = "</method>";
-        const string XML_TAG_END = ">";
-        const string XML_SELFCLOSE_TAG_END = "/>";
-
         const string TO_STRING_FORMAT = "{0}.{1}(paramsCount: {2}; time: {3})";
-
 
         private Stopwatch sw;
 
@@ -67,36 +61,21 @@ namespace TracerLib
             return result;
         }
 
-        public string ToXMLString(int indent)
+        public XmlElement ToXMLElement(XmlDocument root)
         {
-            string tab = "";
-            for (int i = 0; i < indent; ++i)
-            {
-                tab += " ";
-            }
+            XmlElement result = root.CreateElement("method");
+            result.SetAttribute("name", Info.Method.Name);
+            result.SetAttribute("time", Info.Time.ToString());
+            result.SetAttribute("package", Info.Method.ReflectedType.Name);
 
-            string paramsCountString = "";
             int paramsCount = Info.Method.GetParameters().Count();
             if (paramsCount > 0)
-                 paramsCountString = XML_PARAMS_COUNT + "\"" + Info.Method.GetParameters().Count() + "\"";
+                result.SetAttribute("params", paramsCount.ToString());
 
-            object[] args = new object[] { Info.Method.Name, Info.Time.ToString(), Info.Method.ReflectedType.Name, paramsCountString };
-            string result = tab + String.Format(XML_METHOD_START, args);
-
-            if (Children.Count > 0)
+            foreach (var child in Children)
             {
-                result += XML_TAG_END;
-                foreach (var child in Children)
-                {
-                    result += "\n" + child.ToXMLString(indent + 1);
-                }
-                result += "\n" + tab + XML_METHOD_END;
+                result.AppendChild(child.ToXMLElement(root));
             }
-            else
-            {
-                result += XML_SELFCLOSE_TAG_END;
-            }
-
             return result;
         }
     }

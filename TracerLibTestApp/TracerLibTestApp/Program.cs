@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading;
+using System.Xml;
 
 using TracerLib;
 
@@ -16,8 +17,11 @@ namespace TracerLibTestApp
         static void Main(string[] args)
         {
             TraceClassMethod();
-            TraceMethod();
+
             TraceThread();
+            TraceThread();
+
+            TraceMethod();
 
             Tracer.PrintToConsole();
 
@@ -30,8 +34,8 @@ namespace TracerLibTestApp
 
             if (answ == 'y')
             {
-                string text = Tracer.BuildXml();
-                System.IO.File.WriteAllText(OUTPUT_FILE_NAME, text);
+                XmlDocument doc = Tracer.BuildXml();
+                doc.Save("result.xml");
 
                 Console.WriteLine("\n\nFile {0} successfully saved.", OUTPUT_FILE_NAME);
                 Console.ReadKey();

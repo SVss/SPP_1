@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading;
+using System.Windows.Forms;
 using System.Xml;
 
 using TracerLib;
@@ -8,8 +9,7 @@ namespace TracerLibTestApp
 {
     class Program
     {
-        const string OUTPUT_FILE_NAME = "result.xml";
-
+        [STAThread]
         static void Main(string[] args)
         {
             TraceClassMethod();
@@ -31,9 +31,28 @@ namespace TracerLibTestApp
             if (answ == 'y')
             {
                 XmlDocument doc = Tracer.BuildXml();
-                doc.Save("result.xml");
+                SaveFileDialog saveDialog = new SaveFileDialog();
+                saveDialog.Filter = "Xml files|*.xml";
 
-                Console.WriteLine("\n\nFile {0} successfully saved.", OUTPUT_FILE_NAME);
+                DialogResult saveAnswer = saveDialog.ShowDialog();
+                if (saveAnswer == DialogResult.OK)
+                {
+                    string fileName = saveDialog.FileNames[0];
+                    try
+                    {
+                        doc.Save(fileName);
+                        Console.WriteLine("\n\nReport successfully saved to file\n{0}.", fileName);
+                    }
+                    catch(XmlException)
+                    {
+                        Console.WriteLine("\n\nCan't save output file.");
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("\n\nSaving aborted.");
+                }
+
                 Console.ReadKey();
             }
         }

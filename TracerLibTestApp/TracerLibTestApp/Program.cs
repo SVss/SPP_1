@@ -9,6 +9,8 @@ namespace TracerLibTestApp
 {
     class Program
     {
+        static Tracer mainTracer = Tracer.GetInstance();
+
         [STAThread]
         static void Main(string[] args)
         {
@@ -19,7 +21,7 @@ namespace TracerLibTestApp
 
             TraceMethod();
 
-            Tracer.PrintToConsole();
+            mainTracer.PrintToConsole();
 
             char answ = 'n';
             do
@@ -30,7 +32,7 @@ namespace TracerLibTestApp
 
             if (answ == 'y')
             {
-                XmlDocument doc = Tracer.BuildXml();
+                XmlDocument doc = mainTracer.BuildXml();
                 SaveFileDialog saveDialog = new SaveFileDialog();
                 saveDialog.Filter = "Xml files|*.xml";
 
@@ -59,21 +61,21 @@ namespace TracerLibTestApp
 
         static void TraceClassMethod()
         {
-            Tracer.StartTrace();
+            mainTracer.StartTrace();
 
             RecClass.getString(5, 6, 7);
 
-            Tracer.StopTrace();
+            mainTracer.StopTrace();
         }
 
         static void TraceMethod()
         {
-            Tracer.StartTrace();
+            mainTracer.StartTrace();
 
             int x = go();
             Console.WriteLine(x);
 
-            Tracer.StopTrace();
+            mainTracer.StopTrace();
         }
 
         static void TraceThread()
@@ -85,23 +87,23 @@ namespace TracerLibTestApp
 
         static int go()
         {
-            Tracer.StartTrace();
+            mainTracer.StartTrace();
 
             int result = 0;
             for (int i = 0; i < 3; ++i)
                 result += r1();
 
-            Tracer.StopTrace();
+            mainTracer.StopTrace();
             return result;
         }
 
         static int r1()
         {
-            Tracer.StartTrace();
+            mainTracer.StartTrace();
 
             int result = 42;
 
-            Tracer.StopTrace();
+            mainTracer.StopTrace();
             return result;
         }
 
@@ -112,9 +114,11 @@ namespace TracerLibTestApp
         const int REC_DEPTH = 5;
         const int SLEEP_TIME = 50;
 
+        static Tracer anotherTracer = Tracer.GetInstance();
+
         public static void getString(int x, int y, int z)
         {
-            Tracer.StartTrace();
+            anotherTracer.StartTrace();
 
             String result = " abc defg";
             result += "9  ";
@@ -123,12 +127,12 @@ namespace TracerLibTestApp
             result += creativeName().ToString();
             result = result.Trim();
 
-            Tracer.StopTrace();
+            anotherTracer.StopTrace();
         }
 
         public static int myCoolFunction1(int a)
         {
-            Tracer.StartTrace();
+            anotherTracer.StartTrace();
 
             int result;
             if (a < REC_DEPTH)
@@ -141,27 +145,27 @@ namespace TracerLibTestApp
                 result = a;
             }
 
-            Tracer.StopTrace();
+            anotherTracer.StopTrace();
             return result;
         }
 
         public static int anotherAmazingMethod()
         {
-            Tracer.StartTrace();
+            anotherTracer.StartTrace();
 
             int result = 5;
 
-            Tracer.StopTrace();
+            anotherTracer.StopTrace();
             return result;
         }
 
         public static int creativeName()
         {
-            Tracer.StartTrace();
+            anotherTracer.StartTrace();
 
             int result = 42;
 
-            Tracer.StopTrace();
+            anotherTracer.StopTrace();
             return result;
         }
     }

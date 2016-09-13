@@ -6,18 +6,49 @@ using System.Xml;
 
 namespace TracerLib
 {
-    public static class Tracer
+    interface ITracer
+    {
+        void StartTrace();
+        void StopTrace();
+        XmlDocument BuildXml();
+        void PrintToConsole();
+    }
+
+    public sealed class Tracer: ITracer
     {
         private const bool NeedFileInfo = false;
         private const int SkipFramesCount = 1;      // to skip "StartTrace" method's stack frame
         private const string RootTag = "root";
         private const string CantStopExceptionMessage = "Can't stop trace before starting";
 
-        private static Dictionary<int, ThreadsListItem> ThreadsDictionary = new Dictionary<int, ThreadsListItem>();
+        private static Dictionary<int, ThreadsListItem> ThreadsDictionary;
+        private static object lockObj = new object();
+
+        private static Tracer instance = null;
+
+        private Tracer()
+        {
+            ThreadsDictionary = new Dictionary<int, ThreadsListItem>();
+        }
 
         // Public
 
-        public static void StartTrace()
+        public static Tracer GetInstance()
+        {
+            if (instance == null)
+            {
+                lock (lockObj)
+                {
+                    if (instance == null)
+                    {
+                        instance = new Tracer();
+                    }
+                }
+            }
+            return Tracer.instance;
+        }
+
+        public void StartTrace()
         {
             StackTrace context = new StackTrace(NeedFileInfo);
 
@@ -25,7 +56,7 @@ namespace TracerLib
             MethodInfo currentMethodInfo = new MethodInfo(currentMethod);
 
             int threadId = Thread.CurrentThread.ManagedThreadId;
-            lock (ThreadsDictionary)
+            lock (lockObj)
             {
                 if (ThreadsDictionary.ContainsKey(threadId) == false)
                 {
@@ -37,10 +68,10 @@ namespace TracerLib
             }
         }
 
-        public static void StopTrace()
+        public void StopTrace()
         {
             int threadId = Thread.CurrentThread.ManagedThreadId;
-            lock (ThreadsDictionary)
+            lock (lockObj)
             {
                 if (ThreadsDictionary.ContainsKey(threadId) == false)
                 {
@@ -51,12 +82,11 @@ namespace TracerLib
             }
         }
 
-        public static XmlDocument BuildXml()
+        public XmlDocument BuildXml()
         {
             XmlDocument result = new XmlDocument();
             XmlElement root = (XmlElement)result.AppendChild(result.CreateElement(RootTag));
-
-            lock (ThreadsDictionary)
+            lock (lockObj)
             {
                 foreach (ThreadsListItem item in ThreadsDictionary.Values)
                 {
@@ -66,10 +96,10 @@ namespace TracerLib
             return result;
         }
 
-        public static void PrintToConsole()
+        public void PrintToConsole()
         {
             string result = String.Empty;
-            lock (ThreadsDictionary)
+            lock (lockObj)
             {
                 foreach (ThreadsListItem item in ThreadsDictionary.Values)
                 {

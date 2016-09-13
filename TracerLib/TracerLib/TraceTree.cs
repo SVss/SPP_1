@@ -8,37 +8,47 @@ namespace TracerLib
 {
     class TraceTree
     {
-        const string TO_STRING_FORMAT = "{0}.{1}(paramsCount: {2}; time: {3})";
+        private const string MethodToStringFormat = "{0}.{1}(paramsCount: {2}; time: {3})";
+        private const string MethodTag = "method";
+        private const string NameAttribute = "name";
+        private const string TimeAttribute = "time";
+        private const string ParamsAttribute = "params";
+        private const string PackageAttribute = "package";
 
-        private Stopwatch sw;
+        private Stopwatch NodeStopwatch;
+
+        // Public
 
         public List<TraceTree> Children { get; set; }
         public MethodInfo Info { get; set; }
 
         public TraceTree(MethodInfo info)
         {
-            sw = new Stopwatch();
+            if (info == null)
+            {
+                throw new ArgumentNullException("info");
+            }
             this.Info = info;
+            NodeStopwatch = new Stopwatch();
             this.Children = new List<TraceTree>();
         }
 
-        public void startTimer()
+        public void StartTimer()
         {
-            sw.Reset();
-            sw.Start();
+            NodeStopwatch.Reset();
+            NodeStopwatch.Start();
         }
 
-        public void stopTimer()
+        public void StopTimer()
         {
-            sw.Stop();
-            //Console.WriteLine(sw.Elapsed.ToString());
-            Info.Time = sw.ElapsedMilliseconds;
+            NodeStopwatch.Stop();
+            Info.Time = NodeStopwatch.ElapsedMilliseconds;
         }
 
-        public string ToString(int indent)
+        public string ToString(int indentStart = 0, int indentStep = 1)
         {
-            string result = "";
-            for (int i = 0; i < indent; ++i)
+            string result = String.Empty;
+            for (int i = 0; i < indentStart; ++i)
             {
                 result += " ";
             }
@@ -49,31 +59,31 @@ namespace TracerLib
                 Info.Method.GetParameters().Count(),
                 Info.Time.ToString()
             };
-
-            result += String.Format(TO_STRING_FORMAT, args);
+            result += String.Format(MethodToStringFormat, args);
 
             foreach (var child in Children)
             {
-                result += "\n" + child.ToString(indent + 1);
+                result += Environment.NewLine + child.ToString(indentStart + indentStep, indentStep);
             }
-
-            return result;
+            return result.TrimStart(Environment.NewLine.ToCharArray());
         }
 
-        public XmlElement ToXMLElement(XmlDocument root)
+        public XmlElement ToXMLElement(XmlDocument document)
         {
-            XmlElement result = root.CreateElement("method");
-            result.SetAttribute("name", Info.Method.Name);
-            result.SetAttribute("time", Info.Time.ToString());
-            result.SetAttribute("package", Info.Method.ReflectedType.Name);
+            XmlElement result = document.CreateElement(MethodTag);
+            result.SetAttribute(NameAttribute, Info.Method.Name);
+            result.SetAttribute(TimeAttribute, Info.Time.ToString());
+            result.SetAttribute(PackageAttribute, Info.Method.ReflectedType.Name);
 
             int paramsCount = Info.Method.GetParameters().Count();
             if (paramsCount > 0)
-                result.SetAttribute("params", paramsCount.ToString());
+            {
+                result.SetAttribute(ParamsAttribute, paramsCount.ToString());
+            }
 
             foreach (var child in Children)
             {
-                result.AppendChild(child.ToXMLElement(root));
+                result.AppendChild(child.ToXMLElement(document));
             }
             return result;
         }

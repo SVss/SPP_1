@@ -8,103 +8,75 @@ namespace TracerLib
 {
     public static class Tracer
     {
-        private const int FRAME_NUMBER = 1;             // not to see "StartTrace" each time
-        private const string TO_STRING_THREAD_FORMAT= "Thread {0} (time: {1})\nMethods:\n";
+        private const bool NeedFileInfo = false;
+        private const int SkipFramesCount = 1;      // to skip "StartTrace" method's stack frame
+        private const string RootTag = "root";
+        private const string CantStopExceptionMessage = "Can't stop trace before starting";
 
-        private static StackTrace stackTracer = new StackTrace(true);
-        private static Dictionary<int, ThreadsListItem> threadsDict = new Dictionary<int,ThreadsListItem>();
+        private static Dictionary<int, ThreadsListItem> ThreadsDictionary = new Dictionary<int, ThreadsListItem>();
+
+        // Public
 
         public static void StartTrace()
         {
-            var method = (new StackTrace(true)).GetFrame(FRAME_NUMBER).GetMethod();
-            MethodInfo mi = new MethodInfo(method);
+            StackTrace context = new StackTrace(NeedFileInfo);
+
+            System.Reflection.MethodBase currentMethod = context.GetFrame(SkipFramesCount).GetMethod();
+            MethodInfo currentMethodInfo = new MethodInfo(currentMethod);
 
             int threadId = Thread.CurrentThread.ManagedThreadId;
-            lock (threadsDict)
+            lock (ThreadsDictionary)
             {
-                if (!threadsDict.ContainsKey(threadId))
+                if (ThreadsDictionary.ContainsKey(threadId) == false)
                 {
-                    var item = new ThreadsListItem();
-                    item.CallStack = new Stack<TraceTree>();
-                    item.CallTree = new List<TraceTree>();
-                    item.Time = 0;
-
-                    threadsDict.Add(threadId, item);
+                    ThreadsDictionary.Add(threadId, new ThreadsListItem(threadId));
                 }
 
-                var threadInfo = threadsDict[threadId];
-
-                TraceTree node = new TraceTree(mi);
-                if (threadInfo.CallStack.Count == 0)
-                {
-                    threadInfo.CallTree.Add(node);
-                }
-                else
-                {
-                    threadInfo.CallStack.Peek().Children.Add(node);
-                }
-
-                threadInfo.CallStack.Push(node);
-                node.startTimer();
+                TraceTree node = new TraceTree(currentMethodInfo);
+                ThreadsDictionary[threadId].PushNode(node);
             }
         }
 
         public static void StopTrace()
         {
             int threadId = Thread.CurrentThread.ManagedThreadId;
-            lock (threadsDict)
+            lock (ThreadsDictionary)
             {
-                if (!threadsDict.ContainsKey(threadId))
+                if (ThreadsDictionary.ContainsKey(threadId) == false)
                 {
-                    throw new Exception("Can't stop trace before starting");
+                    throw new Exception(CantStopExceptionMessage);
                 }
 
-                var node = threadsDict[threadId].CallStack.Pop();
-                node.stopTimer();
-
-                if (threadsDict[threadId].CallStack.Count == 0)
-                    threadsDict[threadId].Time += node.Info.Time;
+                ThreadsDictionary[threadId].PopNode();
             }
         }
 
         public static XmlDocument BuildXml()
         {
             XmlDocument result = new XmlDocument();
-            XmlElement root = (XmlElement)result.AppendChild(result.CreateElement("root"));
+            XmlElement root = (XmlElement)result.AppendChild(result.CreateElement(RootTag));
 
-            foreach (int id in threadsDict.Keys)
+            lock (ThreadsDictionary)
             {
-                XmlElement thread = result.CreateElement("thread");
-                thread.SetAttribute("id", id.ToString());
-                thread.SetAttribute("time", threadsDict[id].Time.ToString());
-
-                root.AppendChild(thread);
-
-                foreach (var item in threadsDict[id].CallTree)
+                foreach (ThreadsListItem item in ThreadsDictionary.Values)
                 {
-                    thread.AppendChild(item.ToXMLElement(result));
+                    root.AppendChild(item.ToXmlElement(result));
                 }
             }
-
             return result;
         }
 
         public static void PrintToConsole()
         {
-            string result = "";
-            foreach (int id in threadsDict.Keys)
+            string result = String.Empty;
+            lock (ThreadsDictionary)
             {
-                object[] args = new object[] { id.ToString(), threadsDict[id].Time };
-                result += "\n" + String.Format(TO_STRING_THREAD_FORMAT, args);
-
-                foreach (var item in threadsDict[id].CallTree)
+                foreach (ThreadsListItem item in ThreadsDictionary.Values)
                 {
-                    result += item.ToString(1) + "\n";
+                    result += item.ToString() + Environment.NewLine;
                 }
             }
-
             Console.Write(result);
         }
     }
-
 }

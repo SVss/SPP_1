@@ -13,6 +13,10 @@ namespace TracerLib
 
         public MethodInfo(System.Reflection.MethodBase method)
         {
+            if (method == null)
+            {
+                throw new ArgumentNullException("method");
+            }
             this.Method = method;
             this.Time = 0;
         }

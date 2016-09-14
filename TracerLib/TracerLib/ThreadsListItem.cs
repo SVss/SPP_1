@@ -1,20 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Xml;
 
 namespace TracerLib
 {
     class ThreadsListItem
     {
-        private const string ThreadTag = "thread";
-        private const string ThreadIdAttribute = "id";
-        private const string TimeAttribute = "time";
-        private const string ThreadToStringFormat = "Thread {0} (time: {1})";
-        private const string MethodsListStart = "Methods:";
-        private const string CantPopExceptionMessage = "Can't pop item from empty CallStack";
-
         private int Id;
         private Stack<TraceTree> CallStack { get; set; }
         private List<TraceTree> CallTree { get; set; }   // List to keep several methods in MainThread
@@ -49,7 +41,7 @@ namespace TracerLib
         {
             if (CallStack.Count <= 0)
             {
-                throw new Exception(CantPopExceptionMessage);
+                throw new Exception(ExceptionMessages.CantPopExceptionMessage);
             }
             TraceTree result = CallStack.Pop();
 
@@ -61,9 +53,9 @@ namespace TracerLib
 
         public XmlElement ToXmlElement(XmlDocument document)
         {
-            XmlElement result = document.CreateElement(ThreadTag);
-            result.SetAttribute(ThreadIdAttribute, Id.ToString());
-            result.SetAttribute(TimeAttribute, Time.ToString());
+            XmlElement result = document.CreateElement(XmlConstants.ThreadTag);
+            result.SetAttribute(XmlConstants.ThreadIdAttribute, Id.ToString());
+            result.SetAttribute(XmlConstants.TimeAttribute, Time.ToString());
 
             foreach (TraceTree item in CallTree)
             {
@@ -76,8 +68,8 @@ namespace TracerLib
         {
             string result = String.Empty;
             object[] args = new object[] { Id.ToString(), Time };
-            result = String.Format(ThreadToStringFormat, args);
-            result += Environment.NewLine + MethodsListStart;
+            result = String.Format(StringConstants.ThreadToStringFormat, args);
+            result += Environment.NewLine + StringConstants.MethodsListStart;
 
             foreach (TraceTree item in CallTree)
             {
@@ -100,5 +92,24 @@ namespace TracerLib
                 Time += node.Info.Time;
             }
         }
+    }
+
+    // Constants
+
+    public static partial class XmlConstants
+    {
+        public static string ThreadTag { get { return "thread"; } }
+        public static string ThreadIdAttribute { get { return "id"; } }
+    }
+
+    public static partial class StringConstants
+    {
+        public static string ThreadToStringFormat { get { return "Thread {0} (time: {1})"; } }
+        public static string MethodsListStart { get { return "Methods:"; } }
+    }
+
+    public static partial class ExceptionMessages
+    {
+        public static string CantPopExceptionMessage { get { return "Can't pop item from empty CallStack"; } }
     }
 }

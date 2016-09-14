@@ -16,11 +16,6 @@ namespace TracerLib
 
     public sealed class Tracer: ITracer
     {
-        private const bool NeedFileInfo = false;
-        private const int SkipFramesCount = 1;      // to skip "StartTrace" method's stack frame
-        private const string RootTag = "root";
-        private const string CantStopExceptionMessage = "Can't stop trace before starting";
-
         private static Dictionary<int, ThreadsListItem> ThreadsDictionary;
         private static object lockObj = new object();
 
@@ -50,9 +45,9 @@ namespace TracerLib
 
         public void StartTrace()
         {
-            StackTrace context = new StackTrace(NeedFileInfo);
+            StackTrace context = new StackTrace(ConfigConstants.NeedFileInfoFlag);
 
-            System.Reflection.MethodBase currentMethod = context.GetFrame(SkipFramesCount).GetMethod();
+            System.Reflection.MethodBase currentMethod = context.GetFrame(ConfigConstants.SkipFramesCount).GetMethod();
             MethodInfo currentMethodInfo = new MethodInfo(currentMethod);
 
             int threadId = Thread.CurrentThread.ManagedThreadId;
@@ -75,7 +70,7 @@ namespace TracerLib
             {
                 if (ThreadsDictionary.ContainsKey(threadId) == false)
                 {
-                    throw new Exception(CantStopExceptionMessage);
+                    throw new Exception(ExceptionMessages.CantStopExceptionMessage);
                 }
 
                 ThreadsDictionary[threadId].PopNode();
@@ -85,7 +80,7 @@ namespace TracerLib
         public XmlDocument BuildXml()
         {
             XmlDocument result = new XmlDocument();
-            XmlElement root = (XmlElement)result.AppendChild(result.CreateElement(RootTag));
+            XmlElement root = (XmlElement)result.AppendChild(result.CreateElement(XmlConstants.RootTag));
             lock (lockObj)
             {
                 foreach (ThreadsListItem item in ThreadsDictionary.Values)
@@ -108,5 +103,24 @@ namespace TracerLib
             }
             Console.Write(result);
         }
+    }
+
+    // Constants
+
+    public static class ConfigConstants
+    {
+        public static bool NeedFileInfoFlag = false;
+        public const int SkipFramesCount = 1;      // to skip "StartTrace" method's stack 
+    }
+
+    public static partial class XmlConstants
+    {
+        public static string RootTag { get { return "root"; } }
+        public static string TimeAttribute { get { return "time"; } }
+    }
+
+    public static partial class ExceptionMessages
+    {
+        public static string CantStopExceptionMessage { get { return "Can't stop trace before starting"; } }
     }
 }

@@ -8,13 +8,6 @@ namespace TracerLib
 {
     class TraceTree
     {
-        private const string MethodToStringFormat = "{0}.{1}(paramsCount: {2}; time: {3})";
-        private const string MethodTag = "method";
-        private const string NameAttribute = "name";
-        private const string TimeAttribute = "time";
-        private const string ParamsAttribute = "params";
-        private const string PackageAttribute = "package";
-
         private Stopwatch NodeStopwatch;
 
         // Public
@@ -59,7 +52,7 @@ namespace TracerLib
                 Info.Method.GetParameters().Count(),
                 Info.Time.ToString()
             };
-            result += String.Format(MethodToStringFormat, args);
+            result += String.Format(StringConstants.MethodToStringFormat, args);
 
             foreach (var child in Children)
             {
@@ -70,15 +63,15 @@ namespace TracerLib
 
         public XmlElement ToXMLElement(XmlDocument document)
         {
-            XmlElement result = document.CreateElement(MethodTag);
-            result.SetAttribute(NameAttribute, Info.Method.Name);
-            result.SetAttribute(TimeAttribute, Info.Time.ToString());
-            result.SetAttribute(PackageAttribute, Info.Method.ReflectedType.Name);
+            XmlElement result = document.CreateElement(XmlConstants.MethodTag);
+            result.SetAttribute(XmlConstants.NameAttribute, Info.Method.Name);
+            result.SetAttribute(XmlConstants.TimeAttribute, Info.Time.ToString());
+            result.SetAttribute(XmlConstants.PackageAttribute, Info.Method.ReflectedType.Name);
 
             int paramsCount = Info.Method.GetParameters().Count();
             if (paramsCount > 0)
             {
-                result.SetAttribute(ParamsAttribute, paramsCount.ToString());
+                result.SetAttribute(XmlConstants.ParamsAttribute, paramsCount.ToString());
             }
 
             foreach (var child in Children)
@@ -87,5 +80,20 @@ namespace TracerLib
             }
             return result;
         }
+    }
+
+    // Constants
+
+    public static partial class XmlConstants
+    {
+        public static string MethodTag { get { return "method"; } }
+        public static string NameAttribute { get { return "name"; } }
+        public static string ParamsAttribute { get { return "params"; } }
+        public static string PackageAttribute { get { return "package"; } }
+    }
+
+    public static partial class StringConstants
+    {
+        public static string MethodToStringFormat { get { return "{0}.{1}(paramsCount: {2}; time: {3})"; } }
     }
 }

@@ -9,10 +9,10 @@ namespace TracerLibTestApp
 {
     class Program
     {
-        static Tracer mainTracer = Tracer.GetInstance();
+        private static readonly Tracer MainTracer = Tracer.GetInstance();
 
         [STAThread]
-        static void Main(string[] args)
+        public static void Main(string[] args)
         {
             TraceMethod();
             TraceClassMethods();
@@ -28,12 +28,12 @@ namespace TracerLibTestApp
 
         private static void PrintReport()
         {
-            mainTracer.PrintToConsole();
+            MainTracer.PrintToConsole();
         }
 
         private static void SaveXmlReport()
         {
-            char answ = 'n';
+            char answ;
             do
             {
                 Console.Write("\nSave to xml ? [y/n]: ");
@@ -44,10 +44,9 @@ namespace TracerLibTestApp
 
             if (answ == 'y')
             {
-                XmlDocument doc = mainTracer.BuildXml();
+                XmlDocument doc = MainTracer.BuildXml();
 
-                SaveFileDialog saveDialog = new SaveFileDialog();
-                saveDialog.Filter = "Xml files|*.xml";
+                SaveFileDialog saveDialog = new SaveFileDialog {Filter = "Xml files|*.xml"};
 
                 DialogResult saveAnswer = saveDialog.ShowDialog();
                 if (saveAnswer == DialogResult.OK)
@@ -72,22 +71,21 @@ namespace TracerLibTestApp
 
         private static void TraceClassMethods()
         {
-            mainTracer.StartTrace();
+            MainTracer.StartTrace();
 
             AnotherClass1.Method1(5, 6, 7);
-
             AnotherClass1.UnusualMethod();
 
-            mainTracer.StopTrace();
+            MainTracer.StopTrace();
         }
 
         private static void TraceMethod()
         {
-            mainTracer.StartTrace();
+            MainTracer.StartTrace();
 
             int i = Method0();
 
-            mainTracer.StopTrace();
+            MainTracer.StopTrace();
         }
 
         private static void TraceThread1()
@@ -108,23 +106,23 @@ namespace TracerLibTestApp
 
         private static int Method0()
         {
-            mainTracer.StartTrace();
+            MainTracer.StartTrace();
 
             int result = 0;
             for (int i = 0; i < 3; ++i)
                 result += Get42();
 
-            mainTracer.StopTrace();
+            MainTracer.StopTrace();
             return result;
         }
 
         private static int Get42()
         {
-            mainTracer.StartTrace();
+            MainTracer.StartTrace();
 
             int result = 42;
 
-            mainTracer.StopTrace();
+            MainTracer.StopTrace();
             return result;
         }
 
@@ -132,14 +130,14 @@ namespace TracerLibTestApp
 
     class AnotherClass1
     {
-        const int RecursionDepth = 5;
-        const int SleepTime = 50;
+        private const int RecursionDepth = 5;
+        private const int SleepTime = 50;
 
-        static Tracer anotherTracer = Tracer.GetInstance();
+        static readonly Tracer AnotherTracer = Tracer.GetInstance();
 
         public static void Method1(int x, int y, int z)
         {
-            anotherTracer.StartTrace();
+            AnotherTracer.StartTrace();
 
             String result = " abc defg";
             result += "9  ";
@@ -148,12 +146,12 @@ namespace TracerLibTestApp
             result += UnusualMethod();
             result = result.Trim();
 
-            anotherTracer.StopTrace();
+            AnotherTracer.StopTrace();
         }
 
         public static int CoolMethod(int a)
         {
-            anotherTracer.StartTrace();
+            AnotherTracer.StartTrace();
 
             int result;
             if (a < RecursionDepth)
@@ -166,39 +164,39 @@ namespace TracerLibTestApp
                 result = a;
             }
 
-            anotherTracer.StopTrace();
+            AnotherTracer.StopTrace();
             return result;
         }
 
         private static int AnotherCoolMethod()
         {
-            anotherTracer.StartTrace();
+            AnotherTracer.StartTrace();
 
             Random rnd = new Random();
             int result = rnd.Next(-10, 10); ;
 
-            anotherTracer.StopTrace();
+            AnotherTracer.StopTrace();
             return result;
         }
 
         public static string UnusualMethod()
         {
-            anotherTracer.StartTrace();
+            AnotherTracer.StartTrace();
 
             string result = "Unusual";
 
-            anotherTracer.StopTrace();
+            AnotherTracer.StopTrace();
             return result;
         }
     }
 
     class AnotherClass2
     {
-        private static Tracer thirdTracer = Tracer.GetInstance();
+        private static readonly Tracer ThirdTracer = Tracer.GetInstance();
 
         public void StrangeMethod(string inputString)
         {
-            thirdTracer.StartTrace();
+            ThirdTracer.StartTrace();
 
             char[] characters = inputString.ToCharArray();
             for (int i = 0; i < characters.Length; ++i)
@@ -207,16 +205,16 @@ namespace TracerLibTestApp
             }
             string tempString = characters.ToString();
 
-            thirdTracer.StopTrace();
+            ThirdTracer.StopTrace();
         }
 
         char UpperChar(char c)
         {
-            thirdTracer.StartTrace();
+            ThirdTracer.StartTrace();
 
             char result = Char.ToUpper(c);
 
-            thirdTracer.StopTrace();
+            ThirdTracer.StopTrace();
             return result;
         }
     }

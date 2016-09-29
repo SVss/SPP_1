@@ -1,79 +1,72 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Reflection;
 using System.Threading;
 using System.Xml;
 
 namespace TracerLib
 {
-    interface ITracer
-    {
-        void StartTrace();
-        void StopTrace();
-        XmlDocument BuildXml();
-        void PrintToConsole();
-    }
-
     public sealed class Tracer: ITracer
     {
-        private static Dictionary<int, ThreadsListItem> ThreadsDictionary;
-        private static object lockObj = new object();
+        private static Dictionary<int, ThreadsListItem> _threadsDictionary;
+        private static readonly object LockObj = new object();
 
-        private static Tracer instance = null;
+        private static Tracer _instance;
 
         private Tracer()
         {
-            ThreadsDictionary = new Dictionary<int, ThreadsListItem>();
+            _threadsDictionary = new Dictionary<int, ThreadsListItem>();
         }
 
         // Public
 
         public static Tracer GetInstance()
         {
-            if (instance == null)
+            if (_instance == null)
             {
-                lock (lockObj)
+                lock (LockObj)
                 {
-                    if (instance == null)
+                    if (_instance == null)
                     {
-                        instance = new Tracer();
+                        _instance = new Tracer();
                     }
                 }
             }
-            return Tracer.instance;
+            return _instance;
         }
 
         public void StartTrace()
         {
             StackTrace context = new StackTrace(ConfigConstants.NeedFileInfoFlag);
 
-            System.Reflection.MethodBase currentMethod = context.GetFrame(ConfigConstants.SkipFramesCount).GetMethod();
+            MethodBase currentMethod = context.GetFrame(ConfigConstants.SkipFramesCount).GetMethod();
             MethodInfo currentMethodInfo = new MethodInfo(currentMethod);
 
             int threadId = Thread.CurrentThread.ManagedThreadId;
-            lock (lockObj)
+            lock (LockObj)
             {
-                if (ThreadsDictionary.ContainsKey(threadId) == false)
+                if (_threadsDictionary.ContainsKey(threadId) == false)
                 {
-                    ThreadsDictionary.Add(threadId, new ThreadsListItem(threadId));
+                    _threadsDictionary.Add(threadId, new ThreadsListItem(threadId));
                 }
 
                 TraceTree node = new TraceTree(currentMethodInfo);
-                ThreadsDictionary[threadId].PushNode(node);
+                _threadsDictionary[threadId].PushNode(node);
             }
         }
 
         public void StopTrace()
         {
             int threadId = Thread.CurrentThread.ManagedThreadId;
-            lock (lockObj)
+            lock (LockObj)
             {
-                if (ThreadsDictionary.ContainsKey(threadId) == false)
+                if (_threadsDictionary.ContainsKey(threadId) == false)
                 {
                     throw new Exception(ExceptionMessages.CantStopExceptionMessage);
                 }
 
-                ThreadsDictionary[threadId].PopNode();
+                _threadsDictionary[threadId].PopNode();
             }
         }
 
@@ -81,9 +74,9 @@ namespace TracerLib
         {
             XmlDocument result = new XmlDocument();
             XmlElement root = (XmlElement)result.AppendChild(result.CreateElement(XmlConstants.RootTag));
-            lock (lockObj)
+            lock (LockObj)
             {
-                foreach (ThreadsListItem item in ThreadsDictionary.Values)
+                foreach (ThreadsListItem item in _threadsDictionary.Values)
                 {
                     root.AppendChild(item.ToXmlElement(result));
                 }
@@ -94,11 +87,11 @@ namespace TracerLib
         public void PrintToConsole()
         {
             string result = String.Empty;
-            lock (lockObj)
+            lock (LockObj)
             {
-                foreach (ThreadsListItem item in ThreadsDictionary.Values)
+                foreach (ThreadsListItem item in _threadsDictionary.Values)
                 {
-                    result += item.ToString() + Environment.NewLine;
+                    result += item + Environment.NewLine;
                 }
             }
             Console.Write(result);
@@ -115,12 +108,12 @@ namespace TracerLib
 
     public static partial class XmlConstants
     {
-        public static string RootTag { get { return "root"; } }
-        public static string TimeAttribute { get { return "time"; } }
+        public static string RootTag => "root";
+        public static string TimeAttribute => "time";
     }
 
     public static partial class ExceptionMessages
     {
-        public static string CantStopExceptionMessage { get { return "Can't stop trace before starting"; } }
+        public static string CantStopExceptionMessage => "Can't stop trace before starting";
     }
 }

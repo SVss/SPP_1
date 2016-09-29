@@ -1,15 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Xml;
 
 namespace TracerLib
 {
-    class ThreadsListItem
+    internal class ThreadsListItem
     {
-        private int Id;
-        private Stack<TraceTree> CallStack { get; set; }
-        private List<TraceTree> CallTree { get; set; }   // List to keep several methods in MainThread
+        private readonly int _id;
+        private Stack<TraceTree> CallStack { get; }
+        private List<TraceTree> CallTree { get; }   // List to keep several methods in MainThread
 
         // Public
 
@@ -17,10 +16,10 @@ namespace TracerLib
 
         public ThreadsListItem(int id)
         {
-            this.Id = id;
-            this.CallStack = new Stack<TraceTree>();
-            this.CallTree = new List<TraceTree>();
-            this.Time = 0;
+            _id = id;
+            CallStack = new Stack<TraceTree>();
+            CallTree = new List<TraceTree>();
+            Time = 0;
         }
 
         public void PushNode(TraceTree node)
@@ -54,26 +53,25 @@ namespace TracerLib
         public XmlElement ToXmlElement(XmlDocument document)
         {
             XmlElement result = document.CreateElement(XmlConstants.ThreadTag);
-            result.SetAttribute(XmlConstants.ThreadIdAttribute, Id.ToString());
+            result.SetAttribute(XmlConstants.ThreadIdAttribute, _id.ToString());
             result.SetAttribute(XmlConstants.TimeAttribute, Time.ToString());
 
             foreach (TraceTree item in CallTree)
             {
-                result.AppendChild(item.ToXMLElement(document));
+                result.AppendChild(item.ToXmlElement(document));
             }
             return result;
         }
 
-        override public string ToString()
+        public override string ToString()
         {
-            string result = String.Empty;
-            object[] args = new object[] { Id.ToString(), Time };
-            result = String.Format(StringConstants.ThreadToStringFormat, args);
+            object[] args = { _id.ToString(), Time };
+            var result = string.Format(StringConstants.ThreadToStringFormat, args);
             result += Environment.NewLine + StringConstants.MethodsListStart;
 
             foreach (TraceTree item in CallTree)
             {
-                result += Environment.NewLine + item.ToString(1, 1);
+                result += Environment.NewLine + item.ToString(1);
             }
             return result;
         }
@@ -84,7 +82,7 @@ namespace TracerLib
         {
             if (node == null)
             {
-                throw new ArgumentNullException("node");
+                throw new ArgumentNullException(nameof(node));
             }
 
             if (CallStack.Count == 0)
@@ -98,18 +96,18 @@ namespace TracerLib
 
     public static partial class XmlConstants
     {
-        public static string ThreadTag { get { return "thread"; } }
-        public static string ThreadIdAttribute { get { return "id"; } }
+        public static string ThreadTag => "thread";
+        public static string ThreadIdAttribute => "id";
     }
 
     public static partial class StringConstants
     {
-        public static string ThreadToStringFormat { get { return "Thread {0} (time: {1})"; } }
-        public static string MethodsListStart { get { return "Methods:"; } }
+        public static string ThreadToStringFormat => "Thread {0} (time: {1})";
+        public static string MethodsListStart => "Methods:";
     }
 
     public static partial class ExceptionMessages
     {
-        public static string CantPopExceptionMessage { get { return "Can't pop item from empty CallStack"; } }
+        public static string CantPopExceptionMessage => "Can't pop item from empty CallStack";
     }
 }

@@ -1,21 +1,21 @@
 ﻿using System;
-using System.Diagnostics;
+using System.Reflection;
 
 namespace TracerLib
 {
-    class MethodInfo
+    internal class MethodInfo
     {
-        public System.Reflection.MethodBase Method { get; set; }
+        public MethodBase Method { get; set; }
         public long Time { get; set; }
 
-        public MethodInfo(System.Reflection.MethodBase method)
+        public MethodInfo(MethodBase method)
         {
             if (method == null)
             {
-                throw new ArgumentNullException("method");
+                throw new ArgumentNullException(nameof(method));
             }
-            this.Method = method;
-            this.Time = 0;
+            Method = method;
+            Time = 0;
         }
     }
 }
